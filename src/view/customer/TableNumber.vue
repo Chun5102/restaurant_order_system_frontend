@@ -1,11 +1,14 @@
 <script setup>
 import { useNavigation } from '@/composables/useNavigation'
+import { useTableStore } from '@/stores/table'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const { goto } = useNavigation()
+const tableStore = useTableStore()
 const goMenu = () => {
-  goto('/Menu', { params: { tableNumber: route.params.tableNumber } })
+  tableStore.setTableNumber(route.params.tableNumber)
+  goto('Menu')
 }
 </script>
 
@@ -36,10 +39,13 @@ const goMenu = () => {
   flex-direction: column;
   /* justify-content: space-between; */
   align-items: center;
-  padding: 2rem;
+  padding: 0;
+  margin: 0;
   background: linear-gradient(to bottom, #fff1e5, #ffe5d9);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 /* Logo + 店名 */

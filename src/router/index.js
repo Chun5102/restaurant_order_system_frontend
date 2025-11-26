@@ -2,9 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
-    path: '/Table/:tableNumber',
+    path: '/:tableNumber',
     name: 'Table',
     component: () => import('@/view/customer/TableNumber.vue'),
+  },
+  {
+    path: '/Menu',
+    name: 'Menu',
+    component: () => import('@/view/customer/Menu.vue'),
   },
 ]
 const router = createRouter({
