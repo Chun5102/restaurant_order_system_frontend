@@ -1,19 +1,24 @@
 <script setup>
-import { ElButton, ElDialog, ElInputNumber, ElSwitch } from 'element-plus'
-import { ref } from 'vue'
+import api from '@/service/api'
+import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
+import { computed, onMounted, ref } from 'vue'
+import CartDialog from './CartDialog.vue'
+import TopBar from './TopBar.vue'
 
-const menuItems = ref([
-  { id: 1, name: '拿鐵', price: 120, img: 'https://via.placeholder.com/100?text=拿鐵' },
-  { id: 2, name: '美式咖啡', price: 100, img: 'https://via.placeholder.com/100?text=美式' },
-  { id: 3, name: '卡布奇諾', price: 130, img: 'https://via.placeholder.com/100?text=卡布奇諾' },
-  { id: 4, name: '摩卡', price: 140, img: 'https://via.placeholder.com/100?text=摩卡' },
-  { id: 5, name: '焦糖瑪奇朵', price: 150, img: 'https://via.placeholder.com/100?text=焦糖' },
-])
+const menuItems = ref([])
 
 const dialogVisible = ref(false)
 const selectedItem = ref(null)
 const selectedQty = ref(1)
 const isCardView = ref(true)
+const currentCategory = ref('all')
+const cartVisible = ref(false)
+const cartItems = ref([])
+
+const filteredMenu = computed(() => {
+  if (currentCategory.value === 'all') return menuItems.value
+  return menuItems.value.filter((i) => i.category === currentCategory.value)
+})
 
 const openDialog = (item) => {
   selectedItem.value = item
@@ -25,19 +30,47 @@ const addToCart = () => {
   console.log(`加入購物車：${selectedItem.value.name} x ${selectedQty.value}`)
   dialogVisible.value = false
 }
+
+onMounted(async () => {
+  try {
+    const res = await api.getMenus()
+    if (res.data.responseCode === '200') {
+      menuItems.value = res.data.data
+    }
+  } catch (err) {
+    console.error('載入商品失敗:', err)
+  }
+})
 </script>
 
 <template>
   <div class="menu-page">
-    <div class="header">
-      <h2 class="page-title">菜單</h2>
-      <el-switch v-model="isCardView" active-text="卡片模式" inactive-text="列表模式" />
-    </div>
-
+    <TopBar
+      @updateCategory="currentCategory = $event"
+      @updateView="isCardView = $event"
+      @openCart="cartVisible = true"
+    />
+    <CartDialog
+      v-model:visible="cartVisible"
+      :cart-items="cartItems"
+      @removeItem="
+        (id) => {
+          cartItems = cartItems.filter((item) => item.id !== id)
+        }
+      "
+      @checkout="
+        () => {
+          console.log('結帳', cartItems)
+          cartItems = []
+          cartVisible = false
+        }
+      "
+    />
+    <div v-for="item in filteredMenu" :key="item.id"></div>
     <!-- 卡片模式 -->
     <div v-if="isCardView" class="menu-grid">
-      <div class="menu-card" v-for="item in menuItems" :key="item.id" @click="openDialog(item)">
-        <img class="menu-img" :src="item.img" alt="menu image" />
+      <div class="menu-card" v-for="item in filteredMenu" :key="item.id" @click="openDialog(item)">
+        <img class="menu-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
         <p class="item-name">{{ item.name }}</p>
         <p class="item-price">{{ item.price }} 元</p>
       </div>
@@ -47,11 +80,11 @@ const addToCart = () => {
     <div v-else class="menu-list">
       <div
         class="menu-list-item"
-        v-for="item in menuItems"
+        v-for="item in filteredMenu"
         :key="item.id"
         @click="openDialog(item)"
       >
-        <img class="list-img" :src="item.img" alt="menu image" />
+        <img class="list-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
         <div class="list-info">
           <p class="item-name">{{ item.name }}</p>
           <p class="item-price">{{ item.price }} 元</p>
@@ -62,7 +95,8 @@ const addToCart = () => {
     <!-- 彈窗 -->
     <el-dialog v-model="dialogVisible" :title="selectedItem?.name" width="400px" center>
       <div class="dialog-content">
-        <img class="dialog-img" :src="selectedItem?.img" alt="menu image" />
+        <img class="dialog-img" :src="selectedItem?.imageBase64" loading="lazy" alt="menu image" />
+        <p>{{ selectedItem?.description }}</p>
         <p class="dialog-price">{{ selectedItem?.price }} 元</p>
         <el-input-number v-model="selectedQty" :min="1" :max="10" />
       </div>
@@ -139,8 +173,8 @@ body {
 }
 
 .menu-img {
-  width: 80px;
-  height: 80px;
+  width: 135px;
+  height: 85px;
   border-radius: 1rem;
   margin-bottom: 0.5rem;
   object-fit: cover;
@@ -174,8 +208,8 @@ body {
 }
 
 .list-img {
-  width: 60px;
-  height: 60px;
+  width: 150px;
+  height: 100px;
   border-radius: 1rem;
   object-fit: cover;
   margin-right: 1rem;
@@ -206,8 +240,8 @@ body {
 }
 
 .dialog-img {
-  width: 150px;
-  height: 150px;
+  width: 350px;
+  height: 240px;
   border-radius: 1rem;
   object-fit: cover;
 }
