@@ -1,6 +1,8 @@
 <script setup>
-import { ElButton, ElDialog } from 'element-plus'
-import { defineEmits, defineProps, ref, watch } from 'vue'
+import { useCartStore } from '@/stores/car'
+import { Delete } from '@element-plus/icons-vue'
+import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
+import { computed, defineEmits, defineProps, ref, watch } from 'vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -11,7 +13,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'removeItem', 'checkout'])
-
+const cartStore = useCartStore()
+const cart = computed(() => cartStore.cart)
 const localVisible = ref(props.visible)
 
 // 同步父層傳入的 visible
@@ -34,19 +37,82 @@ const close = () => {
 
 <template>
   <el-dialog v-model="localVisible" @close="close" title="購物車" width="400px">
-    <div v-if="cartItems.length === 0" style="text-align: center; color: #888; margin: 1rem 0">
+    <div v-if="cartStore.cartEmpty" style="text-align: center; color: #888; margin: 1rem 0">
       購物車是空的
     </div>
-    <div
-      v-for="item in cartItems"
-      :key="item.id"
-      style="display: flex; justify-content: space-between; margin-bottom: 8px"
-    >
-      <span>{{ item.name }} x {{ item.qty }} - {{ item.price * item.qty }} 元</span>
-      <el-button type="text" @click="emit('removeItem', item.id)">刪除</el-button>
+    <div v-else style="display: flex; justify-content: space-between; margin-bottom: 8px">
+      <el-table :data="cart" style="width: 100%">
+        <el-table-column label="餐點" width="80">
+          <template #default="scope">
+            <el-image
+              :src="scope.row.imageBase64"
+              style="width: 50px; height: 50px; border-radius: 4px"
+              fit="cover"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="名稱" min-width="80" max-width="150">
+          <template #default="scope">
+            <span>{{ scope.row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="價格" width="80">
+          <template #default="scope">
+            <span class="font-semibold">${{ scope.row.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="數量" width="150">
+          <template #default="scope">
+            <el-input-number v-model="scope.row.quantity" :min="1" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column label="小計" width="80">
+          <template #default="scope">
+            <span class="font-semibold">${{ scope.row.price * scope.row.quantity }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="60">
+          <template #default="scope">
+            <el-button
+              type="danger"
+              :icon="Delete"
+              circle
+              plain
+              size="small"
+              @click="$emit('removeItem', { id: scope.row.id, name: scope.row.name })"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
     <div style="text-align: right; margin-top: 1rem">
-      <el-button type="primary" @click="emit('checkout')">結帳</el-button>
+      <div class="cart-summary">
+        <p class="label">總計:</p>
+        <p class="price">${{ cartStore.totalPrice }}</p>
+      </div>
+      <el-button type="primary" @click="emit('checkout')" :disabled="cartStore.cartEmpty"
+        >結帳</el-button
+      >
     </div>
   </el-dialog>
 </template>
+
+<style scoped>
+.cart-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.cart-summary .label {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: bold; /* font-bold */
+}
+
+.cart-summary .price {
+  font-size: 1.5rem; /* text-5xl */
+  font-weight: bold; /* font-bold */
+  color: #dc2626; /* text-red-600 */
+}
+</style>

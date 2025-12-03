@@ -1,24 +1,49 @@
 <script setup>
 import api from '@/service/api'
-import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { useCartStore } from '@/stores/car'
+import { ElButton, ElDialog, ElInputNumber, ElMessage, ElPagination } from 'element-plus'
+import { onMounted, ref } from 'vue'
 import CartDialog from './CartDialog.vue'
 import TopBar from './TopBar.vue'
 
+const tableData = JSON.parse(localStorage.getItem('tableData'))
 const menuItems = ref([])
+const cachedPages = ref({})
 
+const cartStore = useCartStore()
 const dialogVisible = ref(false)
 const selectedItem = ref(null)
 const selectedQty = ref(1)
 const isCardView = ref(true)
-const currentCategory = ref('all')
+const category = ref(0)
 const cartVisible = ref(false)
-const cartItems = ref([])
+const currentPage = ref(1)
+const totalItems = ref(0)
+const pageSize = ref(6)
 
-const filteredMenu = computed(() => {
-  if (currentCategory.value === 'all') return menuItems.value
-  return menuItems.value.filter((i) => i.category === currentCategory.value)
-})
+const fetchMenu = async (category, page) => {
+  const key = `${category}-${page}`
+  if (cachedPages.value[key]) {
+    menuItems.value = cachedPages.value[key].content
+    currentPage.value = page
+    totalItems.value = cachedPages.value[key].totalElements
+    pageSize.value = cachedPages.value[key].size
+    return
+  }
+
+  try {
+    const res = await api.getMenus(category, page)
+    if (res.data.responseCode === '200') {
+      menuItems.value = res.data.data.content
+      currentPage.value = res.data.data.number + 1
+      totalItems.value = res.data.data.totalElements
+      pageSize.value = res.data.data.size
+      cachedPages.value[key] = res.data.data
+    }
+  } catch (err) {
+    console.error('載入商品失敗:', err)
+  }
+}
 
 const openDialog = (item) => {
   selectedItem.value = item
@@ -27,19 +52,62 @@ const openDialog = (item) => {
 }
 
 const addToCart = () => {
-  console.log(`加入購物車：${selectedItem.value.name} x ${selectedQty.value}`)
+  const existingItem = cartStore.cart.find((item) => item.id === selectedItem.value.id)
+  if (existingItem) {
+    existingItem.quantity += selectedQty.value
+    ElMessage.success(`${existingItem.name} 數量已更新為 ${existingItem.quantity}`)
+  } else {
+    cartStore.addMenu(selectedItem.value, selectedQty.value)
+    ElMessage.success(`${selectedItem.value.name} 已加入購物車`)
+  }
   dialogVisible.value = false
 }
 
-onMounted(async () => {
+const removeItem = (menu) => {
+  cartStore.removeMenu(menu.id)
+  ElMessage.success(`${menu.name} 已從購物車移除`)
+}
+
+const checkout = async () => {
+  if (cartStore.cartEmpty) {
+    ElMessage.warning('購物車是空的')
+    return
+  }
+  const order = {
+    tableId: tableData.id,
+    totalPrice: cartStore.totalPrice,
+    morderItem: cartStore.cart.map((item) => ({
+      menuId: item.id,
+      menuName: item.name,
+      quantity: item.quantity,
+      subtotal: item.price * item.quantity,
+    })),
+  }
+
   try {
-    const res = await api.getMenus()
+    const res = await api.addOrder(order)
     if (res.data.responseCode === '200') {
-      menuItems.value = res.data.data
+      ElMessage.success('訂單已建立')
+      cartStore.clearCart()
+      cartVisible.value = false
     }
   } catch (err) {
-    console.error('載入商品失敗:', err)
+    console.error('建立訂單失敗:', err)
   }
+}
+
+const handlePageChange = (page) => {
+  currentPage.value = page
+  fetchMenu(category.value, page)
+}
+const onCategoryChange = (val) => {
+  category.value = val
+  console.log('🚀 ~ onCategoryChange ~ category.value:', category.value)
+  fetchMenu(category.value, 1)
+}
+
+onMounted(() => {
+  const res = fetchMenu(category.value, 1)
 })
 </script>
 
@@ -50,26 +118,19 @@ onMounted(async () => {
       @updateView="isCardView = $event"
       @openCart="cartVisible = true"
     />
-    <CartDialog
-      v-model:visible="cartVisible"
-      :cart-items="cartItems"
-      @removeItem="
-        (id) => {
-          cartItems = cartItems.filter((item) => item.id !== id)
-        }
-      "
-      @checkout="
-        () => {
-          console.log('結帳', cartItems)
-          cartItems = []
-          cartVisible = false
-        }
-      "
-    />
-    <div v-for="item in filteredMenu" :key="item.id"></div>
+    <CartDialog v-model:visible="cartVisible" @removeItem="removeItem" @checkout="checkout()" />
+
+    <!-- 分類 tabs -->
+    <el-tabs v-model="category" @tab-change="onCategoryChange" class="tabs">
+      <el-tab-pane label="主食" :name="0" />
+      <el-tab-pane label="飲料" :name="1" />
+    </el-tabs>
+
+    <div v-for="item in menuItems" :key="item.id"></div>
+
     <!-- 卡片模式 -->
     <div v-if="isCardView" class="menu-grid">
-      <div class="menu-card" v-for="item in filteredMenu" :key="item.id" @click="openDialog(item)">
+      <div class="menu-card" v-for="item in menuItems" :key="item.id" @click="openDialog(item)">
         <img class="menu-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
         <p class="item-name">{{ item.name }}</p>
         <p class="item-price">{{ item.price }} 元</p>
@@ -80,7 +141,7 @@ onMounted(async () => {
     <div v-else class="menu-list">
       <div
         class="menu-list-item"
-        v-for="item in filteredMenu"
+        v-for="item in menuItems"
         :key="item.id"
         @click="openDialog(item)"
       >
@@ -90,6 +151,17 @@ onMounted(async () => {
           <p class="item-price">{{ item.price }} 元</p>
         </div>
       </div>
+    </div>
+
+    <div class="pagination-container">
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total="totalItems"
+        @current-change="handlePageChange"
+      />
     </div>
 
     <!-- 彈窗 -->
@@ -250,5 +322,39 @@ body {
   font-size: 1.2rem;
   font-weight: bold;
   color: #333;
+}
+/* Tabs 美化 */
+.tabs {
+  width: 100%;
+  max-width: 40rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 1rem;
+  padding: 0.2rem 0.6rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* 固定分頁在底部 */
+.pagination-container {
+  width: 100%;
+  max-width: 40rem;
+  margin: 1rem auto 2rem auto; /* 頁面下方留白 */
+  display: flex;
+  justify-content: center;
+}
+
+/* 如果要保留 menu-page 的樣式 */
+.menu-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(to bottom, #fff1e5, #ffe5d9) !important;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  box-sizing: border-box;
 }
 </style>

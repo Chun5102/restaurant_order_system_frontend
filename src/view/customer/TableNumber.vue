@@ -1,33 +1,61 @@
 <script setup>
 import { useNavigation } from '@/composables/useNavigation'
-import { useTableStore } from '@/stores/table'
+import api from '@/service/api'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const { goto } = useNavigation()
-const tableStore = useTableStore()
+
+const isLoading = ref(true)
+const tableData = ref(null)
+
+const tableNumber = computed(() => {
+  if (isLoading.value) return ''
+  return tableData.value && tableData.value.id != null ? tableData.value.id : '未知桌號'
+})
+
 const goMenu = () => {
-  tableStore.setTableNumber(route.params.tableNumber)
   goto('Menu')
 }
+
+onMounted(async () => {
+  try {
+    const res = await api.openTable(route.params.tableNumber)
+    if (res.data.responseCode === '200') {
+      tableData.value = res.data.data
+      localStorage.setItem('tableData', JSON.stringify(res.data.data))
+    } else {
+      tableData.value = null
+      localStorage.removeItem('tableData')
+    }
+  } catch (err) {
+    console.error('載入桌號失敗:', err)
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
   <div class="home">
     <!-- Logo / 店名 -->
     <div class="logo-container">
-      <div class="logo">☕</div>
+      <div class="logo">🍽️</div>
       <h1>歡迎光臨</h1>
     </div>
 
     <!-- 桌號卡片 -->
     <div class="table-card">
       <p>桌號</p>
-      <p class="table-number">{{ route.params.tableNumber }}</p>
+      <p v-if="tableData != null" class="table-number">{{ tableNumber }}</p>
+      <p v-else class="table-string">{{ tableNumber }}</p>
     </div>
+    <p v-if="tableData == null" class="warning">請重新掃QR Code</p>
 
     <!-- 開始點餐按鈕 -->
     <button class="start-btn" @click="goMenu">開始點餐</button>
+    <button class="start-btn" @click="">訂單記錄</button>
   </div>
 </template>
 
@@ -101,12 +129,18 @@ p {
   color: #333;
 }
 
+.table-string {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
 /* 按鈕 */
 .start-btn {
   width: 100%;
   max-width: 20rem;
   padding: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   font-size: 1.5rem;
   font-weight: bold;
   color: #fff;
@@ -124,7 +158,11 @@ p {
   transform: scale(0.95);
   box-shadow: 0 4px 10px rgba(255, 107, 53, 0.5);
 }
-
+.warning {
+  font-size: 25px;
+  color: red;
+  margin-top: 4px;
+}
 /* 浮動動畫 */
 @keyframes float {
   0%,

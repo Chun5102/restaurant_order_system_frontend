@@ -1,18 +1,17 @@
 <script setup>
+import { useCartStore } from '@/stores/car'
 import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 
-const emit = defineEmits(['updateView', 'updateCategory', 'openCart'])
+const emit = defineEmits(['updateView', 'openCart'])
 
+const cartStore = useCartStore()
+const tableData = JSON.parse(localStorage.getItem('tableData'))
 const isCardView = ref(true)
 const category = ref('all')
 const toggleView = () => {
   isCardView.value = !isCardView.value
   emit('updateView', isCardView.value)
-}
-
-const onCategoryChange = (val) => {
-  emit('updateCategory', val)
 }
 
 const openCart = () => {
@@ -24,7 +23,7 @@ const openCart = () => {
   <div class="topbar-container">
     <!-- 第一層：標題 + 右側功能按鈕 -->
     <div class="topbar">
-      <h2 class="title">菜單</h2>
+      <h2 class="title">菜單(桌號:{{ tableData.id }})</h2>
 
       <div class="actions">
         <!-- 視圖切換 -->
@@ -35,17 +34,10 @@ const openCart = () => {
         <!-- 購物車 -->
         <button class="icon-btn cart-btn" @click="openCart">
           <ShoppingCart class="icon" />
-          <span class="cart-badge">0</span>
+          <span class="cart-badge">{{ cartStore.totalQuantity }}</span>
         </button>
       </div>
     </div>
-
-    <!-- 第二層：分類 tabs -->
-    <el-tabs v-model="category" @tab-change="onCategoryChange" class="tabs">
-      <el-tab-pane label="全部" name="all" />
-      <el-tab-pane label="主食" :name="0" />
-      <el-tab-pane label="甜點" :name="1" />
-    </el-tabs>
   </div>
 </template>
 
@@ -125,14 +117,5 @@ const openCart = () => {
   border-radius: 50%;
   padding: 2px 5px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Tabs 美化 */
-.tabs {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 1rem;
-  padding: 0.2rem 0.6rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
 }
 </style>
