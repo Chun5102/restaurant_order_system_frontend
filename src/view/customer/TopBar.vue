@@ -1,24 +1,3 @@
-<script setup>
-import { useCartStore } from '@/stores/car'
-import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
-import { ref } from 'vue'
-
-const emit = defineEmits(['updateView', 'openCart'])
-
-const cartStore = useCartStore()
-const tableData = JSON.parse(localStorage.getItem('tableData'))
-const isCardView = ref(true)
-const category = ref('all')
-const toggleView = () => {
-  isCardView.value = !isCardView.value
-  emit('updateView', isCardView.value)
-}
-
-const openCart = () => {
-  emit('openCart')
-}
-</script>
-
 <template>
   <div class="topbar-container">
     <!-- 第一層：標題 + 右側功能按鈕 -->
@@ -40,6 +19,30 @@ const openCart = () => {
     </div>
   </div>
 </template>
+
+<script setup>
+import { useCartStore } from '@/stores/car'
+import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
+import { ref } from 'vue'
+
+const props = defineProps({
+  view: Boolean,
+})
+const emit = defineEmits(['update:view', 'openCart'])
+
+const cartStore = useCartStore()
+const tableData = JSON.parse(localStorage.getItem('tableData'))
+const isCardView = ref(props.view)
+
+const toggleView = () => {
+  isCardView.value = !isCardView.value
+  emit('update:view', isCardView.value)
+}
+
+const openCart = () => {
+  emit('openCart')
+}
+</script>
 
 <style scoped>
 .topbar-container {

@@ -1,3 +1,28 @@
+<template>
+  <div class="home">
+    <!-- Logo / 店名 -->
+    <div class="logo-container">
+      <div class="logo">🍽️</div>
+      <h1>歡迎光臨</h1>
+    </div>
+
+    <!-- 桌號卡片 -->
+    <div class="table-card">
+      <p>桌號</p>
+      <p v-if="tableData != null" class="table-number">{{ tableNumber }}</p>
+      <p v-else class="table-string">{{ tableNumber }}</p>
+    </div>
+    <p v-if="tableData == null" class="warning">請重新掃QR Code</p>
+
+    <!-- 開始點餐按鈕 -->
+    <button class="start-btn" @click="goMenu">開始點餐</button>
+    <button class="start-btn" @click="">
+      訂單記錄
+      <span class="cart-badge">1</span>
+    </button>
+  </div>
+</template>
+
 <script setup>
 import { useNavigation } from '@/composables/useNavigation'
 import api from '@/service/api'
@@ -22,9 +47,9 @@ const goMenu = () => {
 onMounted(async () => {
   try {
     const res = await api.openTable(route.params.tableNumber)
-    if (res.data.responseCode === '200') {
-      tableData.value = res.data.data
-      localStorage.setItem('tableData', JSON.stringify(res.data.data))
+    if (res.responseCode === '200') {
+      tableData.value = res.data
+      localStorage.setItem('tableData', JSON.stringify(res.data))
     } else {
       tableData.value = null
       localStorage.removeItem('tableData')
@@ -36,28 +61,6 @@ onMounted(async () => {
   }
 })
 </script>
-
-<template>
-  <div class="home">
-    <!-- Logo / 店名 -->
-    <div class="logo-container">
-      <div class="logo">🍽️</div>
-      <h1>歡迎光臨</h1>
-    </div>
-
-    <!-- 桌號卡片 -->
-    <div class="table-card">
-      <p>桌號</p>
-      <p v-if="tableData != null" class="table-number">{{ tableNumber }}</p>
-      <p v-else class="table-string">{{ tableNumber }}</p>
-    </div>
-    <p v-if="tableData == null" class="warning">請重新掃QR Code</p>
-
-    <!-- 開始點餐按鈕 -->
-    <button class="start-btn" @click="goMenu">開始點餐</button>
-    <button class="start-btn" @click="">訂單記錄</button>
-  </div>
-</template>
 
 <style scoped>
 /* 全螢幕漸層背景 */
@@ -137,6 +140,7 @@ p {
 
 /* 按鈕 */
 .start-btn {
+  position: relative;
   width: 100%;
   max-width: 20rem;
   padding: 1rem;
@@ -183,5 +187,20 @@ p {
   50% {
     transform: translateY(-15px);
   }
+}
+.cart-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 30px; /* 固定寬度 */
+  height: 30px; /* 固定高度 */
+  background: #e63946;
+  color: #fff;
+  font-size: 1.5rem;
+  text-align: center; /* 文字置中 */
+  line-height: 30px; /* 文字垂直置中 */
+  border-radius: 50%; /* 保持圓形 */
+  font-weight: bold;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
 }
 </style>

@@ -1,40 +1,3 @@
-<script setup>
-import { useCartStore } from '@/stores/car'
-import { Delete } from '@element-plus/icons-vue'
-import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
-import { computed, defineEmits, defineProps, ref, watch } from 'vue'
-
-const props = defineProps({
-  visible: Boolean,
-  cartItems: {
-    type: Array,
-    default: () => [],
-  },
-})
-
-const emit = defineEmits(['update:visible', 'removeItem', 'checkout'])
-const cartStore = useCartStore()
-const cart = computed(() => cartStore.cart)
-const localVisible = ref(props.visible)
-
-// 同步父層傳入的 visible
-watch(
-  () => props.visible,
-  (val) => {
-    localVisible.value = val
-  },
-)
-
-// localVisible 改變時，通知父層
-watch(localVisible, (val) => {
-  emit('update:visible', val)
-})
-
-const close = () => {
-  localVisible.value = false
-}
-</script>
-
 <template>
   <el-dialog v-model="localVisible" @close="close" title="購物車" width="400px">
     <div v-if="cartStore.cartEmpty" style="text-align: center; color: #888; margin: 1rem 0">
@@ -96,6 +59,43 @@ const close = () => {
     </div>
   </el-dialog>
 </template>
+
+<script setup>
+import { useCartStore } from '@/stores/car'
+import { Delete } from '@element-plus/icons-vue'
+import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
+import { computed, defineEmits, defineProps, ref, watch } from 'vue'
+
+const props = defineProps({
+  visible: Boolean,
+  cartItems: {
+    type: Array,
+    default: () => [],
+  },
+})
+
+const emit = defineEmits(['update:visible', 'removeItem', 'checkout'])
+const cartStore = useCartStore()
+const cart = computed(() => cartStore.cart)
+const localVisible = ref(props.visible)
+
+// 同步父層傳入的 visible
+watch(
+  () => props.visible,
+  (val) => {
+    localVisible.value = val
+  },
+)
+
+// localVisible 改變時，通知父層
+watch(localVisible, (val) => {
+  emit('update:visible', val)
+})
+
+const close = () => {
+  localVisible.value = false
+}
+</script>
 
 <style scoped>
 .cart-summary {

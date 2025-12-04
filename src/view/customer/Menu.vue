@@ -1,3 +1,86 @@
+<template>
+  <div class="menu-page">
+    <TopBar v-model:view="isCardView" @openCart="cartVisible = true" />
+    <CartDialog v-model:visible="cartVisible" @removeItem="removeItem" @checkout="checkout()" />
+
+    <!-- 分類 tabs -->
+    <el-tabs v-model="category" @tab-change="onCategoryChange" class="tabs">
+      <el-tab-pane label="主食" :name="0" />
+      <el-tab-pane label="飲料" :name="1" />
+    </el-tabs>
+
+    <!-- Skeleton -->
+    <template v-if="isLoading">
+      <!-- 卡片骨架 -->
+      <div v-if="isCardView" class="menu-grid">
+        <div class="menu-card" v-for="i in 6" :key="i">
+          <el-skeleton animated :rows="5" />
+        </div>
+      </div>
+      <!-- 列表骨架 -->
+      <div v-else class="menu-list">
+        <div class="menu-list-item" v-for="i in 6" :key="i">
+          <el-skeleton class="fade-skeleton" animated :rows="1" />
+        </div>
+      </div>
+    </template>
+
+    <!-- 真實資料 -->
+    <template v-else>
+      <!-- 卡片模式 -->
+      <div v-if="isCardView" class="menu-grid">
+        <div class="menu-card" v-for="item in menuItems" :key="item.id" @click="openDialog(item)">
+          <img class="menu-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
+          <p class="item-name">{{ item.name }}</p>
+          <p class="item-price">{{ item.price }} 元</p>
+        </div>
+      </div>
+
+      <!-- 列表模式 -->
+      <div v-else class="menu-list">
+        <div
+          class="menu-list-item"
+          v-for="item in menuItems"
+          :key="item.id"
+          @click="openDialog(item)"
+        >
+          <img class="list-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
+          <div class="list-info">
+            <p class="item-name">{{ item.name }}</p>
+            <p class="item-price">{{ item.price }} 元</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頁碼 -->
+      <div class="pagination-container">
+        <el-pagination
+          background
+          layout="prev, pager, next"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="totalItems"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </template>
+
+    <!-- 彈窗 -->
+    <el-dialog v-model="dialogVisible" :title="selectedItem?.name" width="400px" center>
+      <div class="dialog-content">
+        <img class="dialog-img" :src="selectedItem?.imageBase64" loading="lazy" alt="menu image" />
+        <p>{{ selectedItem?.description }}</p>
+        <p class="dialog-price">{{ selectedItem?.price }} 元</p>
+        <el-input-number v-model="selectedQty" :min="1" :max="10" />
+      </div>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addToCart">加入購物車</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
 <script setup>
 import api from '@/service/api'
 import { useCartStore } from '@/stores/car'
@@ -14,6 +97,7 @@ const cartStore = useCartStore()
 const dialogVisible = ref(false)
 const selectedItem = ref(null)
 const selectedQty = ref(1)
+const isLoading = ref(true)
 const isCardView = ref(true)
 const category = ref(0)
 const cartVisible = ref(false)
@@ -32,16 +116,19 @@ const fetchMenu = async (category, page) => {
   }
 
   try {
+    isLoading.value = true
     const res = await api.getMenus(category, page)
-    if (res.data.responseCode === '200') {
-      menuItems.value = res.data.data.content
-      currentPage.value = res.data.data.number + 1
-      totalItems.value = res.data.data.totalElements
-      pageSize.value = res.data.data.size
-      cachedPages.value[key] = res.data.data
+    if (res.responseCode === '200') {
+      menuItems.value = res.data.content
+      currentPage.value = res.data.number + 1
+      totalItems.value = res.data.totalElements
+      pageSize.value = res.data.size
+      cachedPages.value[key] = res.data
     }
   } catch (err) {
     console.error('載入商品失敗:', err)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -75,18 +162,16 @@ const checkout = async () => {
   }
   const order = {
     tableId: tableData.id,
-    totalPrice: cartStore.totalPrice,
     morderItem: cartStore.cart.map((item) => ({
       menuId: item.id,
       menuName: item.name,
       quantity: item.quantity,
-      subtotal: item.price * item.quantity,
     })),
   }
 
   try {
     const res = await api.addOrder(order)
-    if (res.data.responseCode === '200') {
+    if (res.responseCode === '200') {
       ElMessage.success('訂單已建立')
       cartStore.clearCart()
       cartVisible.value = false
@@ -110,75 +195,6 @@ onMounted(() => {
   const res = fetchMenu(category.value, 1)
 })
 </script>
-
-<template>
-  <div class="menu-page">
-    <TopBar
-      @updateCategory="currentCategory = $event"
-      @updateView="isCardView = $event"
-      @openCart="cartVisible = true"
-    />
-    <CartDialog v-model:visible="cartVisible" @removeItem="removeItem" @checkout="checkout()" />
-
-    <!-- 分類 tabs -->
-    <el-tabs v-model="category" @tab-change="onCategoryChange" class="tabs">
-      <el-tab-pane label="主食" :name="0" />
-      <el-tab-pane label="飲料" :name="1" />
-    </el-tabs>
-
-    <div v-for="item in menuItems" :key="item.id"></div>
-
-    <!-- 卡片模式 -->
-    <div v-if="isCardView" class="menu-grid">
-      <div class="menu-card" v-for="item in menuItems" :key="item.id" @click="openDialog(item)">
-        <img class="menu-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
-        <p class="item-name">{{ item.name }}</p>
-        <p class="item-price">{{ item.price }} 元</p>
-      </div>
-    </div>
-
-    <!-- 列表模式 -->
-    <div v-else class="menu-list">
-      <div
-        class="menu-list-item"
-        v-for="item in menuItems"
-        :key="item.id"
-        @click="openDialog(item)"
-      >
-        <img class="list-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
-        <div class="list-info">
-          <p class="item-name">{{ item.name }}</p>
-          <p class="item-price">{{ item.price }} 元</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="pagination-container">
-      <el-pagination
-        background
-        layout="prev, pager, next"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :total="totalItems"
-        @current-change="handlePageChange"
-      />
-    </div>
-
-    <!-- 彈窗 -->
-    <el-dialog v-model="dialogVisible" :title="selectedItem?.name" width="400px" center>
-      <div class="dialog-content">
-        <img class="dialog-img" :src="selectedItem?.imageBase64" loading="lazy" alt="menu image" />
-        <p>{{ selectedItem?.description }}</p>
-        <p class="dialog-price">{{ selectedItem?.price }} 元</p>
-        <el-input-number v-model="selectedQty" :min="1" :max="10" />
-      </div>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addToCart">加入購物車</el-button>
-      </template>
-    </el-dialog>
-  </div>
-</template>
 
 <style scoped>
 /* html/body 不要白色背景 */
