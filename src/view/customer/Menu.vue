@@ -1,6 +1,14 @@
 <template>
   <div class="menu-page">
-    <TopBar v-model:view="isCardView" @openCart="cartVisible = true" />
+    <TopBar
+      :title="`菜單(桌號:${tableData.id})`"
+      :actions="
+        actions = [
+          { icon: isCardView ? Grid : List, onClick: toggleView },
+          { icon: ShoppingCart, badge: cartStore.totalQuantity, onClick: openCart },
+        ]
+      "
+    />
     <CartDialog
       v-model:visible="cartVisible"
       @removeItem="removeItem"
@@ -78,11 +86,12 @@ import CardView from '@/components/CardView.vue'
 import ListView from '@/components/ListView.vue'
 import api from '@/service/api'
 import { useCartStore } from '@/stores/car'
+import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import { onMounted, ref } from 'vue'
+import TopBar from '../../components/TopBar.vue'
 import CartDialog from './CartDialog.vue'
 import MenuDialog from './MenuDialog.vue'
-import TopBar from './TopBar.vue'
 
 const tableData = JSON.parse(localStorage.getItem('tableData'))
 const menuItems = ref([])
@@ -180,6 +189,12 @@ const onCategoryChange = (val) => {
   fetchMenu(category.value, 1)
 }
 
+const toggleView = () => {
+  isCardView.value = !isCardView.value
+}
+const openCart = () => {
+  cartVisible.value = true
+}
 onMounted(() => {
   const res = fetchMenu(category.value, 1)
 })

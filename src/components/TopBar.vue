@@ -1,19 +1,22 @@
+<!-- <TopBar
+    title="菜單(桌號:1)"
+    :actions="[
+      { icon: isCardView ? Grid : List, onClick: toggleView },
+      { icon: ShoppingCart, badge: cartStore.totalQuantity, onClick: openCart }
+    ]"
+  /> -->
 <template>
   <div class="topbar-container">
     <!-- 第一層：標題 + 右側功能按鈕 -->
     <div class="topbar">
-      <h2 class="title">菜單(桌號:{{ tableData.id }})</h2>
+      <!-- 標題 -->
+      <h2 class="title">{{ title }}</h2>
 
       <div class="actions">
-        <!-- 視圖切換 -->
-        <button class="icon-btn" @click="toggleView">
-          <component :is="isCardView ? Grid : List" class="icon" />
-        </button>
-
-        <!-- 購物車 -->
-        <button class="icon-btn cart-btn" @click="openCart">
-          <ShoppingCart class="icon" />
-          <span class="cart-badge">{{ cartStore.totalQuantity }}</span>
+        <!-- 功能按鈕 -->
+        <button v-for="(btn, index) in actions" :key="index" class="icon-btn" @click="btn.onClick">
+          <component :is="btn.icon" class="icon" />
+          <span v-if="btn.badge" class="btn-badge">{{ btn.badge }}</span>
         </button>
       </div>
     </div>
@@ -21,27 +24,12 @@
 </template>
 
 <script setup>
-import { useCartStore } from '@/stores/car'
-import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
-import { ref } from 'vue'
-
+import { defineProps } from 'vue'
 const props = defineProps({
-  view: Boolean,
+  title: { type: String, required: true },
+  actions: { type: Array, default: () => [] },
+  // 每個 action 格式: { icon: Component, badge?: Number, onClick: Function }
 })
-const emit = defineEmits(['update:view', 'openCart'])
-
-const cartStore = useCartStore()
-const tableData = JSON.parse(localStorage.getItem('tableData'))
-const isCardView = ref(props.view)
-
-const toggleView = () => {
-  isCardView.value = !isCardView.value
-  emit('update:view', isCardView.value)
-}
-
-const openCart = () => {
-  emit('openCart')
-}
 </script>
 
 <style scoped>
@@ -110,7 +98,7 @@ const openCart = () => {
 }
 
 /* cart badge */
-.cart-badge {
+.btn-badge {
   position: absolute;
   top: -5px;
   right: -5px;
