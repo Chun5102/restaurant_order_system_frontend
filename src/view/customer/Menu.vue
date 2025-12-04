@@ -1,7 +1,13 @@
 <template>
   <div class="menu-page">
     <TopBar v-model:view="isCardView" @openCart="cartVisible = true" />
-    <CartDialog v-model:visible="cartVisible" @removeItem="removeItem" @checkout="checkout()" />
+    <CartDialog
+      v-model:visible="cartVisible"
+      @removeItem="removeItem"
+      @checkout="checkout"
+      @clearCart="clearCart"
+    />
+    <MenuDialog v-model:visible="menuVisible" :item="selectedItem" @addToCart="addToCart" />
 
     <!-- 分類 tabs -->
     <el-tabs v-model="category" @tab-change="onCategoryChange" class="tabs">
@@ -12,45 +18,45 @@
     <!-- Skeleton -->
     <template v-if="isLoading">
       <!-- 卡片骨架 -->
-      <div v-if="isCardView" class="menu-grid">
+      <CardView v-if="isCardView">
         <div class="menu-card" v-for="i in 6" :key="i">
           <el-skeleton animated :rows="5" />
         </div>
-      </div>
+      </CardView>
       <!-- 列表骨架 -->
-      <div v-else class="menu-list">
+      <ListView v-else>
         <div class="menu-list-item" v-for="i in 6" :key="i">
           <el-skeleton class="fade-skeleton" animated :rows="1" />
         </div>
-      </div>
+      </ListView>
     </template>
 
     <!-- 真實資料 -->
     <template v-else>
       <!-- 卡片模式 -->
-      <div v-if="isCardView" class="menu-grid">
+      <CardView v-if="isCardView">
         <div class="menu-card" v-for="item in menuItems" :key="item.id" @click="openDialog(item)">
-          <img class="menu-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
+          <img class="menu-img" :src="item.imageBase64" alt="menu image" />
           <p class="item-name">{{ item.name }}</p>
           <p class="item-price">{{ item.price }} 元</p>
         </div>
-      </div>
+      </CardView>
 
       <!-- 列表模式 -->
-      <div v-else class="menu-list">
+      <ListView v-else>
         <div
           class="menu-list-item"
           v-for="item in menuItems"
           :key="item.id"
           @click="openDialog(item)"
         >
-          <img class="list-img" :src="item.imageBase64" loading="lazy" alt="menu image" />
+          <img class="list-img" :src="item.imageBase64" alt="menu image" />
           <div class="list-info">
             <p class="item-name">{{ item.name }}</p>
             <p class="item-price">{{ item.price }} 元</p>
           </div>
         </div>
-      </div>
+      </ListView>
 
       <!-- 頁碼 -->
       <div class="pagination-container">
@@ -64,29 +70,18 @@
         />
       </div>
     </template>
-
-    <!-- 彈窗 -->
-    <el-dialog v-model="dialogVisible" :title="selectedItem?.name" width="400px" center>
-      <div class="dialog-content">
-        <img class="dialog-img" :src="selectedItem?.imageBase64" loading="lazy" alt="menu image" />
-        <p>{{ selectedItem?.description }}</p>
-        <p class="dialog-price">{{ selectedItem?.price }} 元</p>
-        <el-input-number v-model="selectedQty" :min="1" :max="10" />
-      </div>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="addToCart">加入購物車</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
+import CardView from '@/components/CardView.vue'
+import ListView from '@/components/ListView.vue'
 import api from '@/service/api'
 import { useCartStore } from '@/stores/car'
-import { ElButton, ElDialog, ElInputNumber, ElMessage, ElPagination } from 'element-plus'
+import { ElMessage, ElPagination } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import CartDialog from './CartDialog.vue'
+import MenuDialog from './MenuDialog.vue'
 import TopBar from './TopBar.vue'
 
 const tableData = JSON.parse(localStorage.getItem('tableData'))
@@ -94,7 +89,7 @@ const menuItems = ref([])
 const cachedPages = ref({})
 
 const cartStore = useCartStore()
-const dialogVisible = ref(false)
+const menuVisible = ref(false)
 const selectedItem = ref(null)
 const selectedQty = ref(1)
 const isLoading = ref(true)
@@ -114,45 +109,44 @@ const fetchMenu = async (category, page) => {
     pageSize.value = cachedPages.value[key].size
     return
   }
-
-  try {
-    isLoading.value = true
-    const res = await api.getMenus(category, page)
-    if (res.responseCode === '200') {
-      menuItems.value = res.data.content
-      currentPage.value = res.data.number + 1
-      totalItems.value = res.data.totalElements
-      pageSize.value = res.data.size
-      cachedPages.value[key] = res.data
-    }
-  } catch (err) {
-    console.error('載入商品失敗:', err)
-  } finally {
-    isLoading.value = false
+  isLoading.value = true
+  const res = await api.getMenus(category, page)
+  if (res.responseCode === '200') {
+    menuItems.value = res.data.content
+    currentPage.value = res.data.number + 1
+    totalItems.value = res.data.totalElements
+    pageSize.value = res.data.size
+    cachedPages.value[key] = res.data
   }
+  isLoading.value = false
 }
 
 const openDialog = (item) => {
   selectedItem.value = item
   selectedQty.value = 1
-  dialogVisible.value = true
+  menuVisible.value = true
 }
 
-const addToCart = () => {
-  const existingItem = cartStore.cart.find((item) => item.id === selectedItem.value.id)
+const addToCart = ({ selectedItem, selectedQty }) => {
+  const existingItem = cartStore.cart.find((item) => item.id === selectedItem.id)
   if (existingItem) {
-    existingItem.quantity += selectedQty.value
+    existingItem.quantity += selectedQty
     ElMessage.success(`${existingItem.name} 數量已更新為 ${existingItem.quantity}`)
   } else {
-    cartStore.addMenu(selectedItem.value, selectedQty.value)
-    ElMessage.success(`${selectedItem.value.name} 已加入購物車`)
+    cartStore.addMenu(selectedItem, selectedQty)
+    ElMessage.success(`${selectedItem.name} 已加入購物車`)
   }
-  dialogVisible.value = false
+  menuVisible.value = false
 }
 
 const removeItem = (menu) => {
   cartStore.removeMenu(menu.id)
   ElMessage.success(`${menu.name} 已從購物車移除`)
+}
+
+const clearCart = () => {
+  cartStore.clearCart()
+  ElMessage.success('購物車已清空')
 }
 
 const checkout = async () => {
@@ -169,15 +163,11 @@ const checkout = async () => {
     })),
   }
 
-  try {
-    const res = await api.addOrder(order)
-    if (res.responseCode === '200') {
-      ElMessage.success('訂單已建立')
-      cartStore.clearCart()
-      cartVisible.value = false
-    }
-  } catch (err) {
-    console.error('建立訂單失敗:', err)
+  const res = await api.addOrder(order)
+  if (res.responseCode === '200') {
+    ElMessage.success('訂單已建立')
+    cartStore.clearCart()
+    cartVisible.value = false
   }
 }
 
@@ -187,7 +177,6 @@ const handlePageChange = (page) => {
 }
 const onCategoryChange = (val) => {
   category.value = val
-  console.log('🚀 ~ onCategoryChange ~ category.value:', category.value)
   fetchMenu(category.value, 1)
 }
 
@@ -233,14 +222,6 @@ body {
 }
 
 /* 卡片模式 */
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  width: 100%;
-  max-width: 40rem;
-}
-
 .menu-card {
   background-color: #fff;
   border-radius: 1.5rem;
@@ -269,14 +250,6 @@ body {
 }
 
 /* 列表模式 */
-.menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-  max-width: 40rem;
-}
-
 .menu-list-item {
   display: flex;
   align-items: center;
@@ -319,26 +292,6 @@ body {
   color: #555;
 }
 
-/* 彈窗內容 */
-.dialog-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.dialog-img {
-  width: 350px;
-  height: 240px;
-  border-radius: 1rem;
-  object-fit: cover;
-}
-
-.dialog-price {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
 /* Tabs 美化 */
 .tabs {
   width: 100%;

@@ -11,6 +11,11 @@ const routes = [
     name: 'Menu',
     component: () => import('@/view/customer/Menu.vue'),
   },
+  {
+    path: '/Orders',
+    name: 'Orders',
+    component: () => import('@/view/customer/Orders.vue'),
+  },
 ]
 const router = createRouter({
   history: createWebHistory(),

@@ -53,14 +53,27 @@
         <p class="label">總計:</p>
         <p class="price">${{ cartStore.totalPrice }}</p>
       </div>
+      <el-button type="danger" @click="show = true" :disabled="cartStore.cartEmpty">清空</el-button>
       <el-button type="primary" @click="emit('checkout')" :disabled="cartStore.cartEmpty"
         >結帳</el-button
       >
     </div>
+    <AlertBox
+      v-model:visible="show"
+      title="清空確認"
+      message="確定要清空購物車嗎？"
+      :buttons="[
+        { text: '取消', color: 'secondary', onClick: () => (show = false) },
+        { text: '確認清空', color: 'danger', onClick: () => emit('clearCart') },
+      ]"
+      size="small"
+      :autoClose="false"
+    />
   </el-dialog>
 </template>
 
 <script setup>
+import AlertBox from '@/components/AlertBox.vue'
 import { useCartStore } from '@/stores/car'
 import { Delete } from '@element-plus/icons-vue'
 import { ElButton, ElDialog, ElInputNumber } from 'element-plus'
@@ -68,16 +81,13 @@ import { computed, defineEmits, defineProps, ref, watch } from 'vue'
 
 const props = defineProps({
   visible: Boolean,
-  cartItems: {
-    type: Array,
-    default: () => [],
-  },
 })
 
-const emit = defineEmits(['update:visible', 'removeItem', 'checkout'])
+const emit = defineEmits(['update:visible', 'removeItem', 'checkout', 'clearCart'])
 const cartStore = useCartStore()
 const cart = computed(() => cartStore.cart)
 const localVisible = ref(props.visible)
+const show = ref(false)
 
 // 同步父層傳入的 visible
 watch(

@@ -16,7 +16,7 @@
 
     <!-- 開始點餐按鈕 -->
     <button class="start-btn" @click="goMenu">開始點餐</button>
-    <button class="start-btn" @click="">
+    <button class="start-btn" @click="goOrders">
       訂單記錄
       <span class="cart-badge">1</span>
     </button>
@@ -42,6 +42,10 @@ const tableNumber = computed(() => {
 
 const goMenu = () => {
   goto('Menu')
+}
+
+const goOrders = () => {
+  goto('Orders')
 }
 
 onMounted(async () => {
