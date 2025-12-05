@@ -4,8 +4,14 @@
       :title="`菜單(桌號:${tableData.id})`"
       :actions="
         actions = [
-          { icon: isCardView ? Grid : List, onClick: toggleView },
-          { icon: ShoppingCart, badge: cartStore.totalQuantity, onClick: openCart },
+          { icon: Back, label: '返回', onClick: goBack },
+          { icon: isCardView ? Grid : List, label: '切換模式', onClick: toggleView },
+          {
+            icon: ShoppingCart,
+            badge: cartStore.totalQuantity,
+            label: '購物車',
+            onClick: openCart,
+          },
         ]
       "
     />
@@ -84,31 +90,38 @@
 <script setup>
 import CardView from '@/components/CardView.vue'
 import ListView from '@/components/ListView.vue'
+import { useNavigation } from '@/composables/useNavigation'
 import api from '@/service/api'
 import { useCartStore } from '@/stores/car'
-import { Grid, List, ShoppingCart } from '@element-plus/icons-vue'
+import { Back, Grid, List, ShoppingCart } from '@element-plus/icons-vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import TopBar from '../../components/TopBar.vue'
 import CartDialog from './CartDialog.vue'
 import MenuDialog from './MenuDialog.vue'
 
+// 資料
 const tableData = JSON.parse(localStorage.getItem('tableData'))
 const menuItems = ref([])
 const cachedPages = ref({})
-
 const cartStore = useCartStore()
+// 方法
+const { goto } = useNavigation()
+// 開關
 const menuVisible = ref(false)
-const selectedItem = ref(null)
-const selectedQty = ref(1)
 const isLoading = ref(true)
 const isCardView = ref(true)
-const category = ref(0)
 const cartVisible = ref(false)
+// 選擇菜單
+const selectedItem = ref(null)
+const selectedQty = ref(1)
+// 頁碼資料
+const category = ref(0)
 const currentPage = ref(1)
 const totalItems = ref(0)
 const pageSize = ref(6)
 
+// 獲取菜單
 const fetchMenu = async (category, page) => {
   const key = `${category}-${page}`
   if (cachedPages.value[key]) {
@@ -130,12 +143,14 @@ const fetchMenu = async (category, page) => {
   isLoading.value = false
 }
 
+// 開啟菜單彈窗
 const openDialog = (item) => {
   selectedItem.value = item
   selectedQty.value = 1
   menuVisible.value = true
 }
 
+// 購物車功能
 const addToCart = ({ selectedItem, selectedQty }) => {
   const existingItem = cartStore.cart.find((item) => item.id === selectedItem.id)
   if (existingItem) {
@@ -180,6 +195,7 @@ const checkout = async () => {
   }
 }
 
+// 頁碼
 const handlePageChange = (page) => {
   currentPage.value = page
   fetchMenu(category.value, page)
@@ -189,12 +205,18 @@ const onCategoryChange = (val) => {
   fetchMenu(category.value, 1)
 }
 
+// Topbar按鈕功能
+const goBack = () => {
+  goto('Home', { tableNumber: tableData.qrCode })
+}
 const toggleView = () => {
   isCardView.value = !isCardView.value
 }
 const openCart = () => {
   cartVisible.value = true
 }
+
+// 載入執行
 onMounted(() => {
   const res = fetchMenu(category.value, 1)
 })

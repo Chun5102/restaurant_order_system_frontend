@@ -13,11 +13,14 @@
       <h2 class="title">{{ title }}</h2>
 
       <div class="actions">
-        <!-- 功能按鈕 -->
-        <button v-for="(btn, index) in actions" :key="index" class="icon-btn" @click="btn.onClick">
-          <component :is="btn.icon" class="icon" />
-          <span v-if="btn.badge" class="btn-badge">{{ btn.badge }}</span>
-        </button>
+        <div class="action-item" v-for="(btn, index) in actions" :key="index">
+          <!-- 功能按鈕 -->
+          <button class="icon-btn" @click="btn.onClick">
+            <component :is="btn.icon" class="icon" />
+            <span v-if="btn.badge" class="btn-badge">{{ btn.badge }}</span>
+          </button>
+          <span class="icon-label">{{ btn.label }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -65,7 +68,13 @@ const props = defineProps({
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.8rem; /* 按鈕間隔 */
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column; /* 垂直排列 icon 和 label */
+  align-items: center;
 }
 
 /* icon button */
@@ -95,6 +104,13 @@ const props = defineProps({
   width: 22px;
   height: 22px;
   color: #444;
+}
+
+.icon-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-top: 2px;
+  text-align: center;
 }
 
 /* cart badge */
