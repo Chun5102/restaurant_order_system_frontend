@@ -1,8 +1,14 @@
 <!-- <TopBar
     title="菜單(桌號:1)"
     :actions="[
-      { icon: isCardView ? Grid : List, onClick: toggleView },
-      { icon: ShoppingCart, badge: cartStore.totalQuantity, onClick: openCart }
+          { icon: Back, label: '返回', onClick: goBack },
+          { icon: isCardView ? Grid : List, label: '切換模式', onClick: toggleView },
+          {
+            icon: ShoppingCart,
+            badge: cartStore.totalQuantity,
+            label: '購物車',
+            onClick: openCart,
+          },
     ]"
   /> -->
 <template>
@@ -52,7 +58,7 @@ const props = defineProps({
   align-items: center;
 
   padding: 0.8rem 1rem;
-  background: rgba(255, 255, 255, 0.7);
+  background: #ffa686;
   border-radius: 1rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(10px);

@@ -4,7 +4,7 @@
       <img class="dialog-img" :src="item?.imageBase64" loading="lazy" alt="menu image" />
       <p>{{ item?.description }}</p>
       <p class="dialog-price">{{ item?.price }} 元</p>
-      <el-input-number v-model="selectedQty" :min="1" :max="10" />
+      <el-input-number v-model="selectedQty" :min="1" :max="10" @input="onInput" />
     </div>
     <template #footer>
       <el-button @click="localVisible = false">取消</el-button>
@@ -52,12 +52,24 @@ const close = () => {
 }
 
 const addToCart = () => {
+  let qty = Number(selectedQty.value)
+  if (!qty | isNaN(qty) | (qty < 1)) {
+    qty = 1
+  } else if (qty > 10) {
+    qty = 10
+  }
+
   emit('addToCart', {
     selectedItem: props.item,
-    selectedQty: selectedQty.value,
+    selectedQty: qty,
   })
 
   close()
+}
+
+const onInput = (val) => {
+  const num = val?.toString().replace(/\D/g, '')
+  selectedQty.value = num ? Number(num) : 1
 }
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="menu-page">
     <TopBar
-      :title="`菜單(桌號:${tableData.id})`"
+      :title="`菜單(桌號:${tableDataStore.tableId})`"
       :actions="
         actions = [
           { icon: Back, label: '返回', onClick: goBack },
@@ -74,7 +74,7 @@
 
       <!-- 頁碼 -->
       <div class="pagination-container">
-        <el-pagination
+        <ElPagination
           background
           layout="prev, pager, next"
           :current-page="currentPage"
@@ -93,6 +93,7 @@ import ListView from '@/components/ListView.vue'
 import { useNavigation } from '@/composables/useNavigation'
 import api from '@/service/api'
 import { useCartStore } from '@/stores/car'
+import { useTableDataStore } from '@/stores/tableData'
 import { Back, Grid, List, ShoppingCart } from '@element-plus/icons-vue'
 import { ElMessage, ElPagination } from 'element-plus'
 import { onMounted, ref } from 'vue'
@@ -101,12 +102,12 @@ import CartDialog from './CartDialog.vue'
 import MenuDialog from './MenuDialog.vue'
 
 // 資料
-const tableData = JSON.parse(localStorage.getItem('tableData'))
+const tableDataStore = useTableDataStore()
 const menuItems = ref([])
 const cachedPages = ref({})
 const cartStore = useCartStore()
 // 方法
-const { goto } = useNavigation()
+const { goHome } = useNavigation()
 // 開關
 const menuVisible = ref(false)
 const isLoading = ref(true)
@@ -179,8 +180,8 @@ const checkout = async () => {
     return
   }
   const order = {
-    tableId: tableData.id,
-    morderItem: cartStore.cart.map((item) => ({
+    tableId: tableDataStore.tableId,
+    orderItem: cartStore.cart.map((item) => ({
       menuId: item.id,
       menuName: item.name,
       quantity: item.quantity,
@@ -192,6 +193,8 @@ const checkout = async () => {
     ElMessage.success('訂單已建立')
     cartStore.clearCart()
     cartVisible.value = false
+
+    goHome()
   }
 }
 
@@ -207,7 +210,7 @@ const onCategoryChange = (val) => {
 
 // Topbar按鈕功能
 const goBack = () => {
-  goto('Home', { tableNumber: tableData.qrCode })
+  goHome()
 }
 const toggleView = () => {
   isCardView.value = !isCardView.value
@@ -218,7 +221,8 @@ const openCart = () => {
 
 // 載入執行
 onMounted(() => {
-  const res = fetchMenu(category.value, 1)
+  tableDataStore.setTableId(localStorage.getItem('tableToken'))
+  fetchMenu(category.value, 1)
 })
 </script>
 

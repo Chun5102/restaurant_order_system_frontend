@@ -9,59 +9,47 @@
     <!-- 桌號卡片 -->
     <div class="table-card">
       <p>桌號</p>
-      <p v-if="tableData != null" class="table-number">{{ tableNumber }}</p>
-      <p v-else class="table-string">{{ tableNumber }}</p>
+      <p v-if="tableDataStore.tableId !== null" class="table-number">
+        {{ tableDataStore.tableId }}
+      </p>
+      <p v-else class="table-string">未知桌號</p>
     </div>
-    <p v-if="tableData == null" class="warning">請重新掃QR Code</p>
+    <p v-if="tableDataStore.tableId === null" class="warning">請重新掃QR Code</p>
 
     <!-- 開始點餐按鈕 -->
-    <button class="start-btn" @click="goMenu">開始點餐</button>
-    <button class="start-btn" @click="goOrders">
-      訂單記錄
-      <span class="cart-badge">1</span>
-    </button>
+    <button v-if="!tableDataStore.isOpened" class="start-btn" @click="goMenu">開始點餐</button>
+    <template v-else>
+      <button class="start-btn" @click="goMenu">繼續點餐</button>
+      <button class="start-btn" @click="goOrders">
+        訂單記錄
+        <span class="cart-badge">{{ tableDataStore.orderCount }}</span>
+      </button>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { useNavigation } from '@/composables/useNavigation'
 import api from '@/service/api'
-import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useTableDataStore } from '@/stores/tableData'
+import { onMounted } from 'vue'
 
-const route = useRoute()
 const { goto } = useNavigation()
-
-const isLoading = ref(true)
-const tableData = ref(null)
-
-const tableNumber = computed(() => {
-  if (isLoading.value) return ''
-  return tableData.value && tableData.value.id != null ? tableData.value.id : '未知桌號'
-})
+const tableDataStore = useTableDataStore()
 
 const goMenu = () => {
   goto('Menu')
 }
 
 const goOrders = () => {
-  goto('Orders')
+  goto('Order')
 }
-
 onMounted(async () => {
   try {
-    const res = await api.openTable(route.params.tableNumber)
-    if (res.responseCode === '200') {
-      tableData.value = res.data
-      localStorage.setItem('tableData', JSON.stringify(res.data))
-    } else {
-      tableData.value = null
-      localStorage.removeItem('tableData')
-    }
-  } catch (err) {
-    console.error('載入桌號失敗:', err)
-  } finally {
-    isLoading.value = false
+    const res = await api.getTableStatus()
+    tableDataStore.setTableData(localStorage.getItem('tableToken'), res.data)
+  } catch (error) {
+    localStorage.removeItem('tableToken')
   }
 })
 </script>
