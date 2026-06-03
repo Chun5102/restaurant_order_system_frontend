@@ -7,7 +7,7 @@ export function useNavigation() {
     router.push({ name: 'Home' })
   }
 
-  const goto = (name, params = {}, query = {}) => {
+  const goTo = (name, params = {}, query = {}) => {
     router.push({
       name,
       params,
@@ -21,7 +21,7 @@ export function useNavigation() {
 
   return {
     goHome,
-    goto,
+    goTo,
     replaceTo,
   }
 }

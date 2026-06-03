@@ -24,7 +24,11 @@
           <div class="batch-header">
             <span class="batch-number">{{ index + 1 }}</span>
             <span class="status">{{ order.orderStatus }}</span>
-            <button class="cancel-btn" @click="((show = true), (orderId = order.id))">取消</button>
+            <div v-if="order.orderStatus === '待處理'">
+              <button class="cancel-btn" @click="((show = true), (orderId = order.id))">
+                取消
+              </button>
+            </div>
           </div>
           <div class="batch-items">
             <div class="batch-item" v-for="item in order.orderItems" :key="index">
@@ -52,7 +56,12 @@
               {{ item.menuName }} x{{ item.quantity }}
             </div>
             <div class="subtotal">小計: ${{ order.totalPrice }}</div>
-            <button class="cancel-btn" @click="((show = true), (orderId = order.id))">取消</button>
+
+            <div v-if="order.orderStatus === '待處理'">
+              <button class="cancel-btn" @click="((show = true), (orderId = order.id))">
+                取消
+              </button>
+            </div>
           </div>
         </div>
       </ListView>
@@ -63,7 +72,7 @@
       message="確定要取消訂單嗎？"
       :buttons="[
         { text: '算了', color: 'secondary', onClick: () => (show = false) },
-        { text: '確認取消訂單', color: 'danger', onClick: () => cancelBatch(orderId) },
+        { text: '取消訂單', color: 'danger', onClick: () => cancelBatch(orderId) },
       ]"
       size="small"
       :autoClose="false"
@@ -106,7 +115,7 @@ const goBack = () => {
 }
 
 const cancelBatch = async (orderId) => {
-  const res = await api.cancelOrder(orderId)
+  const res = await api.cancelOrderByCustomer(orderId)
   tableOrder.totalPrice = res.data.totalPrice
   tableOrder.orders = res.data.orders.map((order) => ({
     ...order,
@@ -170,6 +179,8 @@ onMounted(async () => {
 .batch-header {
   display: flex;
   justify-content: space-between;
+  position: relative;
+  display: flex;
   align-items: center;
   margin-bottom: 0.5rem;
 }
@@ -185,10 +196,14 @@ onMounted(async () => {
 
 /* 訂單狀態 */
 .status {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 0.3em 0.6em;
   border-radius: 0.5em;
   background-color: #ffd699;
-  font-size: clamp(0.8rem, 1vw, 1rem); /* 隨螢幕縮放 */
+  text-align: center;
+  font-size: clamp(0.8rem, 1vw, 1rem);
 }
 
 /* 取消按鈕 */
@@ -200,6 +215,7 @@ onMounted(async () => {
   border-radius: 0.5em;
   cursor: pointer;
   font-size: clamp(0.8rem, 1vw, 1rem); /* 隨螢幕縮放 */
+  margin-left: auto;
 }
 
 /* 列表模式 */

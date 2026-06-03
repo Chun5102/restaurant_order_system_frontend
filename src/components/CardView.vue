@@ -9,7 +9,7 @@
 <style scoped>
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   width: 100%;
   max-width: 40rem;

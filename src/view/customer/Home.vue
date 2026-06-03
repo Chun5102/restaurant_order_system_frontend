@@ -34,15 +34,15 @@ import api from '@/service/api'
 import { useTableDataStore } from '@/stores/tableData'
 import { onMounted } from 'vue'
 
-const { goto } = useNavigation()
+const { goTo } = useNavigation()
 const tableDataStore = useTableDataStore()
 
 const goMenu = () => {
-  goto('Menu')
+  goTo('Menu')
 }
 
 const goOrders = () => {
-  goto('Order')
+  goTo('Order')
 }
 onMounted(async () => {
   try {

@@ -44,7 +44,7 @@ const props = defineProps({
 <style scoped>
 .topbar-container {
   width: 100%;
-  max-width: 40rem;
+  /* max-width: 40rem; */
   display: flex;
   flex-direction: column;
   gap: 0.6rem;

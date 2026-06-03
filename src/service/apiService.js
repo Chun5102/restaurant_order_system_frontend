@@ -1,9 +1,11 @@
 import { startLoading, stopLoading } from '@/utils/loadingService'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const apiService = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 600000,
+  withCredentials: true,
 })
 
 apiService.interceptors.request.use(
@@ -23,11 +25,14 @@ apiService.interceptors.response.use(
     stopLoading()
     const res = response.data
     if (res.responseCode !== '200') {
-      // ElMessage.error(res.data || res.message || '發生錯誤')
+      ElMessage.error(res.data || res.message || '發生錯誤')
       return Promise.reject(res)
     }
     return res
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    stopLoading()
+    return Promise.reject(error)
+  },
 )
 export default apiService
