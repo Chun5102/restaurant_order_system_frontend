@@ -35,17 +35,23 @@
 
 ## 系統流程
 
+## 系統流程
+
 ```mermaid
 flowchart TD
 
-A[掃描QR Code]
+A[掃描桌位 QR Code]
 --> B[瀏覽菜單]
 
 B --> C[加入購物車]
 
 C --> D[建立訂單]
 
-D --> E[後台管理]
+D --> E[查詢訂單]
+
+E --> F[後台查看訂單]
+
+F --> G[更新訂單狀態]
 ```
 
 ## 系統畫面
@@ -82,13 +88,16 @@ D --> E[後台管理]
 
 ## 系統架構
 
-Vue 3
-↓
-REST API
-↓
-Spring Boot
-↓
-MySQL
+```mermaid
+flowchart LR
+
+A[Vue 3]
+--> B[REST API]
+
+B --> C[Spring Boot]
+
+C --> D[(MySQL)]
+```
 
 ## 資料庫設計
 
@@ -118,14 +127,11 @@ ERD圖片
 
 後來考量同桌顧客可能分次點餐但需共同結帳，因此新增 MainOrder 作為訂單聚合單位。
 
-開發過程中也多次調整資料表與 API 設計，透過此專案熟悉前後端分離開發流程以及資料模型設計。
+開發過程中也多次調整資料表與 API 設計，包含訂單流程、桌位識別以及登入驗證機制。
+
+透過此專案熟悉前後端分離開發流程、資料模型設計與 RESTful API 串接。
 
 ## 相關連結
 
-Frontend Repository
-
-https://github.com/Chun5102/restaurant_order_system_frontend
-
-Backend Repository
-
-https://github.com/Chun5102/restaurant_order_system_backend
+[Frontend Repository](https://github.com/Chun5102/restaurant_order_system_frontend)
+[Backend Repository](https://github.com/Chun5102/restaurant_order_system_backend)
