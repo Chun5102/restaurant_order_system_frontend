@@ -1,44 +1,131 @@
-# restaurant_order_project
+# 內用掃碼點餐系統
 
-This template should help get you started developing with Vue 3 in Vite.
+近年來許多餐廳採用 QR Code 點餐以提升點餐效率，因此我以此為主題開發一套前後端分離的餐廳點餐系統。
 
-## Recommended IDE Setup
+顧客可透過掃描桌位 QR Code 瀏覽菜單並完成點餐，後台則提供菜單、訂單、桌位及員工管理功能。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 目錄
 
-## Recommended Browser Setup
+- [系統功能](#系統功能)
+- [系統流程](#系統流程)
+- [系統畫面](#系統畫面)
+- [系統架構](#系統架構)
+- [資料庫設計](#資料庫設計)
+- [技術使用](#技術使用)
+- [專案心得](#專案心得)
+- [相關連結](#相關連結)
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## 系統功能
 
-## Customize configuration
+### 顧客端
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- 掃描桌位 QR Code
+- 瀏覽菜單
+- 加入購物車
+- 建立訂單
+- 查詢訂單
 
-## Project Setup
+### 後台管理
 
-```sh
-npm install
+- 菜單管理
+- 訂單管理
+- 桌位管理
+- 員工管理
+- 報表產生
+
+## 系統流程
+
+```mermaid
+flowchart TD
+
+A[掃描QR Code]
+--> B[瀏覽菜單]
+
+B --> C[加入購物車]
+
+C --> D[建立訂單]
+
+D --> E[後台管理]
 ```
 
-### Compile and Hot-Reload for Development
+## 系統畫面
 
-```sh
-npm run dev
-```
+### 顧客端
 
-### Compile and Minify for Production
+#### 菜單頁
 
-```sh
-npm run build
-```
+圖片
 
-### Lint with [ESLint](https://eslint.org/)
+#### 購物車
 
-```sh
-npm run lint
-```
+圖片
+
+#### 訂單查詢
+
+圖片
+
+---
+
+### 後台管理
+
+#### 訂單管理
+
+圖片
+
+#### 菜單管理
+
+圖片
+
+#### 桌位管理
+
+圖片
+
+## 系統架構
+
+Vue 3
+↓
+REST API
+↓
+Spring Boot
+↓
+MySQL
+
+## 資料庫設計
+
+ERD圖片
+
+## 技術使用
+
+### Frontend
+
+- Vue 3
+- Pinia
+- Vue Router
+- Element Plus
+
+### Backend
+
+- Spring Boot
+- Spring Security
+- JPA
+- MySQL
+- JasperReport
+- JWT（開發中）
+
+## 專案心得
+
+開發初期僅設計 Order 與 OrderItem。
+
+後來考量同桌顧客可能分次點餐但需共同結帳，因此新增 MainOrder 作為訂單聚合單位。
+
+開發過程中也多次調整資料表與 API 設計，透過此專案熟悉前後端分離開發流程以及資料模型設計。
+
+## 相關連結
+
+Frontend Repository
+
+https://github.com/Chun5102/restaurant_order_system_frontend
+
+Backend Repository
+
+https://github.com/Chun5102/restaurant_order_system_backend
