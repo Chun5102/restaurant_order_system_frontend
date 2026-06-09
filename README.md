@@ -60,15 +60,15 @@ F --> G[更新訂單狀態]
 
 #### 菜單頁
 
-圖片
+![image](images/customer-menu.png)
 
 #### 購物車
 
-圖片
+![image](images/customer-cart.png)
 
 #### 訂單查詢
 
-圖片
+![image](images/customer-order.png)
 
 ---
 
@@ -76,15 +76,15 @@ F --> G[更新訂單狀態]
 
 #### 訂單管理
 
-圖片
+![image](images/admin-order.png)
 
 #### 菜單管理
 
-圖片
+![image](images/admin-menu.png)
 
 #### 桌位管理
 
-圖片
+![image](images/admin-table.png)
 
 ## 系統架構
 
@@ -134,4 +134,5 @@ ERD圖片
 ## 相關連結
 
 [Frontend Repository](https://github.com/Chun5102/restaurant_order_system_frontend)
+
 [Backend Repository](https://github.com/Chun5102/restaurant_order_system_backend)
