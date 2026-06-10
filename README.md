@@ -2,7 +2,7 @@
 
 近年來許多餐廳採用 QR Code 點餐以提升點餐效率，因此我以此為主題開發一套前後端分離的餐廳點餐系統。
 
-顧客可透過掃描桌位 QR Code 瀏覽菜單並完成點餐，後台則提供菜單、訂單、桌位及員工管理功能。
+顧客可透過掃描桌位 QR Code 瀏覽菜單並完成點餐。系統依據餐廳實際作業流程設計不同角色功能：後廚可查看待製作訂單並更新製作狀態，送餐員可查看待送餐訂單並完成送餐流程，櫃台人員負責結帳及訂單處理，管理員則可進行菜單、訂單、桌位與員工管理。
 
 ## 目錄
 
@@ -25,22 +25,24 @@
 - 建立訂單
 - 查詢訂單
 
-### Kitchen（後廚）
+### 後台系統
+
+#### Kitchen（後廚）
 
 - 查看待製作訂單
 - 更新餐點製作狀態
 
-### Runner（送餐人員）
+#### Runner（送餐人員）
 
 - 查看待送餐訂單
 - 更新送餐狀態
 
-### Front（櫃台）
+#### Front（櫃台）
 
 - 查看訂單資訊
 - 處理結帳流程
 
-### Admin（管理員）
+#### Admin（管理員）
 
 - 菜單管理
 - 訂單管理
@@ -50,7 +52,7 @@
 ## 系統流程
 
 ```mermaid
-flowchart TD
+flowchart LR
 
 A[掃描桌位 QR Code]
 --> B[瀏覽菜單]
@@ -61,9 +63,6 @@ C --> D[建立訂單]
 
 D --> E[查詢訂單]
 
-E --> F[後台查看訂單]
-
-F --> G[更新訂單狀態]
 ```
 
 ```mermaid
@@ -99,7 +98,15 @@ D --> E[完成訂單]
 
 ### 後台管理
 
-### 訂單管理
+#### 訂單處理
+
+<img src="images/kitchen.png" width="90%">
+
+#### 結帳頁
+
+<img src="images/front.png" width="90%"
+
+#### 訂單管理
 
 <img src="images/admin-order.png" width="90%">
 
@@ -129,14 +136,9 @@ C --> D[(MySQL)]
 ```mermaid
 erDiagram
 
-    TABLES ||--o{ MAIN_ORDERS : contains
-    MAIN_ORDERS ||--o{ ORDERS : contains
-    ORDERS ||--o{ ORDER_ITEMS : contains
-    MENU ||--o{ ORDER_ITEMS : referenced_by
-
     TABLES {
         int id
-        string table_number
+        string code
     }
 
     MAIN_ORDERS {
@@ -147,10 +149,11 @@ erDiagram
 
     ORDERS {
         long id
+        int table_id
         string main_order_code
     }
 
-    ORDER_ITEMS {
+    ORDER_ITEM {
         long id
         long order_id
         long menu_id
@@ -161,6 +164,11 @@ erDiagram
         string name
         decimal price
     }
+
+    TABLES ||--o{ MAIN_ORDERS : table_id
+    MAIN_ORDERS ||--o{ ORDERS : main_order_code
+    ORDERS ||--o{ ORDER_ITEM : order_id
+    MENU ||--o{ ORDER_ITEM : menu_id
 ```
 
 ## 技術使用
