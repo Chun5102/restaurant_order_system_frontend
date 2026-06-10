@@ -104,7 +104,7 @@ D --> E[完成訂單]
 
 #### 結帳頁
 
-<img src="images/front.png" width="90%"
+<img src="images/front.png" width="90%">
 
 #### 訂單管理
 
