@@ -10,7 +10,6 @@
 - [系統流程](#系統流程)
 - [系統畫面](#系統畫面)
 - [系統架構](#系統架構)
-- [資料庫設計](#資料庫設計)
 - [技術使用](#技術使用)
 - [專案心得](#專案心得)
 - [相關連結](#相關連結)
@@ -96,7 +95,7 @@ D --> E[完成訂單]
 
 ---
 
-### 後台管理
+### 後台系統
 
 #### 訂單處理
 
@@ -131,46 +130,6 @@ B --> C[Spring Boot]
 C --> D[(MySQL)]
 ```
 
-## 資料模型
-
-```mermaid
-erDiagram
-
-    TABLES {
-        int id
-        string code
-    }
-
-    MAIN_ORDERS {
-        long id
-        string code
-        int table_id
-    }
-
-    ORDERS {
-        long id
-        int table_id
-        string main_order_code
-    }
-
-    ORDER_ITEM {
-        long id
-        long order_id
-        long menu_id
-    }
-
-    MENU {
-        long id
-        string name
-        decimal price
-    }
-
-    TABLES ||--o{ MAIN_ORDERS : table_id
-    MAIN_ORDERS ||--o{ ORDERS : main_order_code
-    ORDERS ||--o{ ORDER_ITEM : order_id
-    MENU ||--o{ ORDER_ITEM : menu_id
-```
-
 ## 技術使用
 
 ### Frontend
@@ -187,7 +146,7 @@ erDiagram
 - JPA
 - MySQL
 - JasperReport
-- JWT（開發中）
+- JWT（部分功能實作）
 
 ## 專案心得
 
@@ -200,5 +159,7 @@ erDiagram
 透過此專案熟悉前後端分離開發流程、資料模型設計與 RESTful API 串接。
 
 ## 相關連結
+
+[Frontend Repository](https://github.com/Chun5102/restaurant_order_system_frontend)
 
 [Backend Repository](https://github.com/Chun5102/restaurant_order_system_backend)
