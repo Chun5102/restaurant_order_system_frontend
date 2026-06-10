@@ -60,31 +60,31 @@ F --> G[更新訂單狀態]
 
 #### 菜單頁
 
-![image](images/customer-menu.png)
+<p align="center">
+  <img src="images/customer-menu.png" width="30%">
+  <img src="images/customer-cart.png" width="30%">
+  <img src="images/customer-order.png" width="30%">
+</p>
 
-#### 購物車
-
-![image](images/customer-cart.png)
-
-#### 訂單查詢
-
-![image](images/customer-order.png)
+<p align="center">
+  菜單頁 ｜ 購物車 ｜ 訂單查詢
+</p>
 
 ---
 
 ### 後台管理
 
-#### 訂單管理
+### 訂單管理
 
-![image](images/admin-order.png)
+<img src="images/admin-order.png" width="90%">
 
 #### 菜單管理
 
-![image](images/admin-menu.png)
+<img src="images/admin-menu.png" width="90%">
 
 #### 桌位管理
 
-![image](images/admin-table.png)
+<img src="images/admin-table.png" width="90%">
 
 ## 系統架構
 
@@ -99,9 +99,44 @@ B --> C[Spring Boot]
 C --> D[(MySQL)]
 ```
 
-## 資料庫設計
+## 資料模型
 
-ERD圖片
+```mermaid
+erDiagram
+
+    TABLES ||--o{ MAIN_ORDERS : contains
+    MAIN_ORDERS ||--o{ ORDERS : contains
+    ORDERS ||--o{ ORDER_ITEMS : contains
+    MENU ||--o{ ORDER_ITEMS : referenced_by
+
+    TABLES {
+        int id
+        string table_number
+    }
+
+    MAIN_ORDERS {
+        long id
+        string code
+        int table_id
+    }
+
+    ORDERS {
+        long id
+        string main_order_code
+    }
+
+    ORDER_ITEMS {
+        long id
+        long order_id
+        long menu_id
+    }
+
+    MENU {
+        long id
+        string name
+        decimal price
+    }
+```
 
 ## 技術使用
 
@@ -132,7 +167,5 @@ ERD圖片
 透過此專案熟悉前後端分離開發流程、資料模型設計與 RESTful API 串接。
 
 ## 相關連結
-
-[Frontend Repository](https://github.com/Chun5102/restaurant_order_system_frontend)
 
 [Backend Repository](https://github.com/Chun5102/restaurant_order_system_backend)
