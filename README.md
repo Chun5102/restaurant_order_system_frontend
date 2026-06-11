@@ -145,7 +145,6 @@ C --> D[(MySQL)]
 - Spring Security
 - JPA
 - MySQL
-- JasperReport
 - JWT（部分功能實作）
 
 ## 專案心得
